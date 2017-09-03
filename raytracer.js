@@ -41,25 +41,41 @@ class RayTracer {
     }
   }
 
-  intersectionPoint(origin, t, dir) {
-    return origin.add(dir.scale(t));
+  intersectionPoint(o, t, dir) {
+    return o.add(dir.scale(t));
   }
 
   getPhongColor(sphere, p, N) {
     // calculate ambient component
     let ambientComponent = this.scene.ambientLight.mul(sphere.material.ambient);
 
-    // let diffuseComponent = new Color(0, 0, 0);
-    // let specularComponent = new Color(0, 0, 0);
+    let diffuseTotal = new Color(0, 0, 0);
+    let specularTotal = new Color(0, 0, 0);
 
-    // for (let light of this.scene.lights) {
-    //   // calculate diffuse component
-    //   let L = light.location.sub(p).normalize();
-    //   if (N.dot(L) >= 0) {
-    //     diffuseComponent = diffuseComponent.plus(sphere.material.diffuse.mul(light.diffuseIntensity));
-    //   }
-    // }
-    return ambientComponent;
+    for (let light of this.scene.lights) {
+      // calculate diffuse component
+      let L = light.location.minus(p).normalize();
+      if (N.dot(L) >= 0) {
+        diffuseTotal = diffuseTotal.plus(
+          sphere.material.diffuse.mul(light.diffuseIntensity).scale(N.dot(L))
+        );
+
+        // calculate reflectance vector
+        let reflectance = N.scale(2 * N.dot(L)).minus(L);
+
+        let view = this.scene.camera.minus(p).normalize();
+        let specular = (sphere.material.specular)
+          .mul(light.specularIntensity)
+          .scale(
+            Math.pow(view.dot(reflectance),sphere.material.shininess)
+          );
+
+        specularTotal = specularTotal.plus(specular)
+      }
+    }
+
+    // console.log(specularTotal);
+    return ambientComponent.plus(diffuseTotal).plus(specularTotal);
   }
 
   colorAtCoordinate(x, y) {
@@ -79,9 +95,9 @@ class RayTracer {
     let sphere = intersection.sphere;
 
     if (sphere) {
-      let intersectionPoint = this.intersectionPoint(ray.origin, intersection.t, ray.direction);
-      let unitNormal = intersectionPoint.minus(sphere.center).normalize();
-      return this.getPhongColor(sphere, intersectionPoint, unitNormal);
+      let p = this.intersectionPoint(ray.origin, intersection.t, ray.direction);
+      let N = p.minus(sphere.center).normalize();
+      return this.getPhongColor(sphere, p, N);
     } else {
       return new Color(0, 0, 0);
     }
@@ -105,50 +121,47 @@ const SCENE = {
     new Sphere(
       new Vector(-1.1, 0.6, -1),
       0.2,
-      new Color(0, 0, 1),
       new Material(
-        new Color(0.2, 0.2, 0.2),
-        new Color(0.2, 0.2, 0.2),
-        new Color(0.2, 0.2, 0.2),
-        2
+        new Color(0.7, 0.7, 0.7),  // a
+        new Color(0.4, 0.4, 0.9),  // d
+        new Color(0.7, 0.7, 0.7),  // s
+        20                         // alpha
       )
     ),
     new Sphere(
       new Vector(0.2, -0.1, -1),
       0.5,
-      new Color(1, 0, 0),
       new Material(
-        new Color(0.2, 0.2, 0.2),
-        new Color(0.2, 0.2, 0.2),
-        new Color(0.2, 0.2, 0.2),
-        2
+        new Color(0.7, 0.7, 0.7),
+        new Color(0.9, 0.5, 0.5),
+        new Color(0.7, 0.7, 0.7),
+        20
       )
     ),
     new Sphere(
       new Vector(1.2, -0.5, -1.75),
       0.4,
-      new Color(0, 1, 0),
       new Material(
-        new Color(0.2, 0.2, 0.2),
-        new Color(0.2, 0.2, 0.2),
-        new Color(0.2, 0.2, 0.2),
-        2
+        new Color(0, 0, 0),
+        new Color(0.5, 0.9, 0.5),
+        new Color(0.7, 0.7, 0.7),
+        20
       )
     )
   ],
   lights: [
+    // new Light(
+    //   new Vector(-3, -0.5, 1),
+    //   new Color(0.8, 0.3, 0.3),
+    //   new Color(0.8, 0.8, 0.8)
+    // ),
     new Light(
-      new Vector(-1.0, 0.8, -0.5),
-      new Color(0.8, 0, 0.1),
-      new Color(0.2, 0.4, 0)
-    ),
-    new Light(
-      new Vector(1.0, -0.8, -0.5),
-      new Color(0.2, 0.7, 0),
-      new Color(0, 0.3, 0.6)
+      new Vector(3, 2, 1),       // location
+      new Color(0.6, 0.6, 0.6),  // diffuse
+      new Color(0.2, 0.2, 0.2)   // specular
     )
   ],
-  ambientLight: new Color(0.2, 0.2, 0.2)
+  ambientLight: new Color(0.3, 0.3, 0.3)
 };
 
 const scaleColorCoord = (color) => {
@@ -163,10 +176,16 @@ const tracer = new RayTracer(SCENE, WIDTH, HEIGHT);
 
 for (let y = 0; y < HEIGHT; y++) {
   for (let x = 0; x < WIDTH; x++) {
+    let color = scaleColorCoord(tracer.colorAtCoordinate(x, y).clamp());
+
+    // if (color.r !== 0 && color.g !== 0 && color.b !== 0) {
+    //   debugger;
+    // }
+
     image.putPixel(
       x,
       y,
-      scaleColorCoord(tracer.colorAtCoordinate(x, y))
+      color
     );
   }
 }

@@ -22,11 +22,11 @@ class Vector {
   }
 
   magnitude() {
-    return Math.sqrt(this.x ** 2 + this.y ** 2 + this.z ** 2);
+    return Math.sqrt(this.dot(this));
   }
 
   normalize() {
-    return new Vector(this.scale(this.magnitude()))
+    return this.scale(1.0 / this.magnitude());
   }
 
   static lerp(vec1, vec2, percent) {

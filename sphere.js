@@ -1,8 +1,7 @@
 class Sphere {
-  constructor(center, radius, color, material) {
+  constructor(center, radius, material) {
     this.center = center;
     this.radius = radius;
-    this.color = color;
     this.material = material;
   }
 }
