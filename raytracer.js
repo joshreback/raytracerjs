@@ -19,9 +19,10 @@ class RayTracer {
       let c = c_prime.dot(c_prime) - sphere.radius ** 2;
 
       let discriminant = b ** 2 - 4 * a * c;
+
       if (discriminant >= 0) {
-        let t1 = (-1 * b + 4 * discriminant) / (2 * a);
-        let t2 = (-1 * b - 4 * discriminant) / (2 * a);
+        let t1 = (-1 * b + Math.sqrt(discriminant)) / (2 * a);
+        let t2 = (-1 * b - Math.sqrt(discriminant)) / (2 * a);
 
         if (t1 > 0 && t1 < t) {
           t = t1;
@@ -34,7 +35,7 @@ class RayTracer {
       }
     }
 
-    return closestSphere
+    return closestSphere;
   }
 
   colorAtCoordinate(x, y) {
@@ -53,7 +54,7 @@ class RayTracer {
     let sphere = this.closestIntersectingSphere(ray);
 
     if (sphere) {
-      return sphere.color
+      return sphere.color;
     } else {
       return new Color(0, 0, 0);
     }
@@ -66,34 +67,37 @@ const image = new Image(WIDTH, HEIGHT);
 document.image = image;
 
 const SCENE = {
-  camera: new Vector(0, 0, -1),
-  imagePlane: new ImagePlane(
-    new Vector(1, 0.75, 0),
-    new Vector(-1, 0.75, 0),
-    new Vector(1, -0.75, 0),
-    new Vector(-1, -0.75, 0)
-  ),
+  camera: new Vector(0, 0, 2),
+  imagePlane: {
+    vec1: new Vector(-1.28, 0.86, -0.5),
+    vec2: new Vector(1.28, 0.86, -0.5),
+    vec3: new Vector(-1.28, -0.86, -0.5),
+    vec4: new Vector(1.28, -0.86, -0.5)
+  },
   spheres: [
     new Sphere(
-      new Vector(0.5, 0.3, 0),
+      new Vector(-1.1, 0.6, -1),
+      0.2,
+      new Color(0, 0, 1)
+    ),
+    new Sphere(
+      new Vector(0.2, -0.1, -1),
       0.5,
-      new Color(1, 0, 0)),
+      new Color(1, 0, 0)
+    ),
     new Sphere(
-      new Vector(0.2, 0.8, 0),
-      0.2,
-      new Color(0, 1, 0)),
-    new Sphere(
-      new Vector(-0.3, -0.5, 0.1),
-      0.2,
-      new Color(0, 0, 1))
+      new Vector(1.2, -0.5, -1.75),
+      0.4,
+      new Color(0, 1, 0)
+    )
   ]
-}
+};
 
 const scaleColorCoord = (color) => {
   return new Color(
-    255 * color.x,
-    255 * color.y,
-    255 * color.z
+    255.0 * color.r,
+    255.0 * color.g,
+    255.0 * color.b
   )
 }
 
