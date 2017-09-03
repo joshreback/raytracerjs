@@ -149,11 +149,11 @@ const SCENE = {
     )
   ],
   lights: [
-    new Light(
-      new Vector(-3, -0.5, 1),
-      new Color(0.8, 0.3, 0.3),
-      new Color(0.8, 0.8, 0.8)
-    ),
+    // new Light(
+    //   new Vector(-3, -0.5, 1),
+    //   new Color(0.8, 0.3, 0.3),
+    //   new Color(0.8, 0.8, 0.8)
+    // ),
     new Light(
       new Vector(0, 2, 3),       // location
       new Color(0.6, 0.6, 0.6),  // diffuse
