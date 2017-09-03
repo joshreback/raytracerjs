@@ -21,6 +21,14 @@ class Vector {
     return this.x * other.x + this.y * other.y + this.z * other.z;
   }
 
+  magnitude() {
+    return Math.sqrt(this.x ** 2 + this.y ** 2 + this.z ** 2);
+  }
+
+  normalize() {
+    return new Vector(this.scale(this.magnitude()))
+  }
+
   static lerp(vec1, vec2, percent) {
     return vec1.scale(1.0 - percent).add(vec2.scale(percent))
   }

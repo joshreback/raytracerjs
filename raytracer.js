@@ -10,13 +10,13 @@ class RayTracer {
     let t = Infinity;
     let closestSphere = null;
 
-    for (let sphere of this.scene.spheres) {
+    for (let sphere of this.scene.objects) {
       let dir = ray.direction;
-      let c_prime = ray.origin.minus(sphere.center);
+      let cPrime = ray.origin.minus(sphere.center);
 
       let a = dir.dot(dir);
-      let b = 2 * (c_prime.dot(dir));
-      let c = c_prime.dot(c_prime) - sphere.radius ** 2;
+      let b = 2 * (cPrime.dot(dir));
+      let c = cPrime.dot(cPrime) - sphere.radius ** 2;
 
       let discriminant = b ** 2 - 4 * a * c;
 
@@ -35,7 +35,31 @@ class RayTracer {
       }
     }
 
-    return closestSphere;
+    return {
+      t: t,
+      sphere: closestSphere
+    }
+  }
+
+  intersectionPoint(origin, t, dir) {
+    return origin.add(dir.scale(t));
+  }
+
+  getPhongColor(sphere, p, N) {
+    // calculate ambient component
+    let ambientComponent = this.scene.ambientLight.mul(sphere.material.ambient);
+
+    // let diffuseComponent = new Color(0, 0, 0);
+    // let specularComponent = new Color(0, 0, 0);
+
+    // for (let light of this.scene.lights) {
+    //   // calculate diffuse component
+    //   let L = light.location.sub(p).normalize();
+    //   if (N.dot(L) >= 0) {
+    //     diffuseComponent = diffuseComponent.plus(sphere.material.diffuse.mul(light.diffuseIntensity));
+    //   }
+    // }
+    return ambientComponent;
   }
 
   colorAtCoordinate(x, y) {
@@ -51,10 +75,13 @@ class RayTracer {
       point.minus(this.scene.camera)
     );
 
-    let sphere = this.closestIntersectingSphere(ray);
+    let intersection = this.closestIntersectingSphere(ray);
+    let sphere = intersection.sphere;
 
     if (sphere) {
-      return sphere.color;
+      let intersectionPoint = this.intersectionPoint(ray.origin, intersection.t, ray.direction);
+      let unitNormal = intersectionPoint.minus(sphere.center).normalize();
+      return this.getPhongColor(sphere, intersectionPoint, unitNormal);
     } else {
       return new Color(0, 0, 0);
     }
@@ -74,23 +101,54 @@ const SCENE = {
     vec3: new Vector(-1.28, -0.86, -0.5),
     vec4: new Vector(1.28, -0.86, -0.5)
   },
-  spheres: [
+  objects: [
     new Sphere(
       new Vector(-1.1, 0.6, -1),
       0.2,
-      new Color(0, 0, 1)
+      new Color(0, 0, 1),
+      new Material(
+        new Color(0.2, 0.2, 0.2),
+        new Color(0.2, 0.2, 0.2),
+        new Color(0.2, 0.2, 0.2),
+        2
+      )
     ),
     new Sphere(
       new Vector(0.2, -0.1, -1),
       0.5,
-      new Color(1, 0, 0)
+      new Color(1, 0, 0),
+      new Material(
+        new Color(0.2, 0.2, 0.2),
+        new Color(0.2, 0.2, 0.2),
+        new Color(0.2, 0.2, 0.2),
+        2
+      )
     ),
     new Sphere(
       new Vector(1.2, -0.5, -1.75),
       0.4,
-      new Color(0, 1, 0)
+      new Color(0, 1, 0),
+      new Material(
+        new Color(0.2, 0.2, 0.2),
+        new Color(0.2, 0.2, 0.2),
+        new Color(0.2, 0.2, 0.2),
+        2
+      )
     )
-  ]
+  ],
+  lights: [
+    new Light(
+      new Vector(-1.0, 0.8, -0.5),
+      new Color(0.8, 0, 0.1),
+      new Color(0.2, 0.4, 0)
+    ),
+    new Light(
+      new Vector(1.0, -0.8, -0.5),
+      new Color(0.2, 0.7, 0),
+      new Color(0, 0.3, 0.6)
+    )
+  ],
+  ambientLight: new Color(0.2, 0.2, 0.2)
 };
 
 const scaleColorCoord = (color) => {
