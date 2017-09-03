@@ -98,6 +98,37 @@ class RayTracer {
     return ambientComponent.plus(diffuseTotal).plus(specularTotal);
   }
 
+  trace(ray, numBounces) {
+    let intersection = this.closestIntersectingSphere(ray);
+    let sphere = intersection.sphere;
+
+    if (sphere) {
+      let p = this.intersectionPoint(ray.origin, intersection.t, ray.direction);
+      let N = p.minus(sphere.center).normalize();
+      let V = ray.direction.reverse().normalize();
+
+      let R = N.scale(2 * N.dot(V)).minus(V);
+
+      let newRay = new Ray(
+        p.add(R.scale(0.01)),
+        R
+      );
+
+      let phongIllumination = this.getPhongIllumination(sphere, p, N);
+      if (numBounces == 0) {
+        return phongIllumination
+      } else {
+        return phongIllumination.plus(
+          sphere.material.reflectivity.mul(
+            this.trace(newRay, --numBounces)
+          )
+        )
+      }
+    } else {
+      return new Color(0, 0, 0);
+    }
+  }
+
   colorAtCoordinate(x, y) {
     let alpha, beta, top, bottom, point, ray;
 
@@ -111,16 +142,7 @@ class RayTracer {
       point.minus(this.scene.camera)
     );
 
-    let intersection = this.closestIntersectingSphere(ray);
-    let sphere = intersection.sphere;
-
-    if (sphere) {
-      let p = this.intersectionPoint(ray.origin, intersection.t, ray.direction);
-      let N = p.minus(sphere.center).normalize();
-      return this.getPhongIllumination(sphere, p, N);
-    } else {
-      return new Color(0, 0, 0);
-    }
+    return this.trace(ray, 3);
   }
 }
 const WIDTH = 256;
@@ -143,9 +165,10 @@ const SCENE = {
       0.5,
       new Material(
         new Color(0.7, 0.7, 0.7),
-        new Color(0.9, 0.5, 0.5),  // red
+        new Color(0.9, 0.5, 0.2),  // red
         new Color(0.7, 0.7, 0.7),
-        20
+        20,
+        new Color(0.2, 0.5, 0.9)
       )
     ),
     new Sphere(
@@ -153,9 +176,10 @@ const SCENE = {
       0.8,
       new Material(
         new Color(0.3, 0.3, 0.3),
-        new Color(0.5, 0.9, 0.5),  // green
+        new Color(0.2, 0.9, 0.5),  // green
         new Color(0.7, 0.7, 0.7),
-        20
+        20,
+        new Color(0.9, 0.2, 0.5)
       )
     )
   ],

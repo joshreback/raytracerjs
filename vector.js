@@ -29,6 +29,10 @@ class Vector {
     return this.scale(1.0 / this.magnitude());
   }
 
+  reverse() {
+    return this.scale(-1);
+  }
+
   static lerp(vec1, vec2, percent) {
     return vec1.scale(1.0 - percent).add(vec2.scale(percent))
   }
