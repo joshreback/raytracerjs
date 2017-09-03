@@ -74,7 +74,6 @@ class RayTracer {
       }
     }
 
-    // console.log(specularTotal);
     return ambientComponent.plus(diffuseTotal).plus(specularTotal);
   }
 
@@ -150,13 +149,13 @@ const SCENE = {
     )
   ],
   lights: [
-    // new Light(
-    //   new Vector(-3, -0.5, 1),
-    //   new Color(0.8, 0.3, 0.3),
-    //   new Color(0.8, 0.8, 0.8)
-    // ),
     new Light(
-      new Vector(3, 2, 1),       // location
+      new Vector(-3, -0.5, 1),
+      new Color(0.8, 0.3, 0.3),
+      new Color(0.8, 0.8, 0.8)
+    ),
+    new Light(
+      new Vector(0, 2, 3),       // location
       new Color(0.6, 0.6, 0.6),  // diffuse
       new Color(0.2, 0.2, 0.2)   // specular
     )
@@ -177,10 +176,6 @@ const tracer = new RayTracer(SCENE, WIDTH, HEIGHT);
 for (let y = 0; y < HEIGHT; y++) {
   for (let x = 0; x < WIDTH; x++) {
     let color = scaleColorCoord(tracer.colorAtCoordinate(x, y).clamp());
-
-    // if (color.r !== 0 && color.g !== 0 && color.b !== 0) {
-    //   debugger;
-    // }
 
     image.putPixel(
       x,
