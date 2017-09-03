@@ -6,11 +6,15 @@ class RayTracer {
 
   }
 
-  closestIntersectingSphere(ray) {
+  closestIntersectingSphere(ray, currentShape) {
     let t = Infinity;
     let closestSphere = null;
 
     for (let sphere of this.scene.objects) {
+      if (currentShape !== undefined && sphere === currentShape) {
+        continue;
+      }
+
       let dir = ray.direction;
       let cPrime = ray.origin.minus(sphere.center);
 
@@ -45,7 +49,19 @@ class RayTracer {
     return o.add(dir.scale(t));
   }
 
-  getPhongColor(sphere, p, N) {
+  isInShadow(sphere, p, L) {
+    let testShadowRay = new Ray(
+      p,
+      L.location.minus(p)
+    )
+
+    let intersection = this.closestIntersectingSphere(testShadowRay, sphere);
+    let t = intersection.t;
+
+    return (intersection.sphere && t > 0 && t < 1);
+  }
+
+  getPhongIllumination(sphere, p, N) {
     // calculate ambient component
     let ambientComponent = this.scene.ambientLight.mul(sphere.material.ambient);
 
@@ -53,6 +69,11 @@ class RayTracer {
     let specularTotal = new Color(0, 0, 0);
 
     for (let light of this.scene.lights) {
+      // calculate whether point is in shadow
+      if (this.isInShadow(sphere, p, light)) {
+        continue;  // ignore diffuse & specular components
+      }
+
       // calculate diffuse component
       let L = light.location.minus(p).normalize();
       if (N.dot(L) >= 0) {
@@ -96,7 +117,7 @@ class RayTracer {
     if (sphere) {
       let p = this.intersectionPoint(ray.origin, intersection.t, ray.direction);
       let N = p.minus(sphere.center).normalize();
-      return this.getPhongColor(sphere, p, N);
+      return this.getPhongIllumination(sphere, p, N);
     } else {
       return new Color(0, 0, 0);
     }
@@ -109,7 +130,7 @@ const image = new Image(WIDTH, HEIGHT);
 document.image = image;
 
 const SCENE = {
-  camera: new Vector(0, 0, 2),
+  camera: new Vector(1, 0, 2),
   imagePlane: {
     vec1: new Vector(-1.28, 0.86, -0.5),
     vec2: new Vector(1.28, 0.86, -0.5),
@@ -118,31 +139,21 @@ const SCENE = {
   },
   objects: [
     new Sphere(
-      new Vector(-1.1, 0.6, -1),
-      0.2,
-      new Material(
-        new Color(0.7, 0.7, 0.7),  // a
-        new Color(0.4, 0.4, 0.9),  // d
-        new Color(0.7, 0.7, 0.7),  // s
-        20                         // alpha
-      )
-    ),
-    new Sphere(
-      new Vector(0.2, -0.1, -1),
+      new Vector(-0.4, -0.1, -1),
       0.5,
       new Material(
         new Color(0.7, 0.7, 0.7),
-        new Color(0.9, 0.5, 0.5),
+        new Color(0.9, 0.5, 0.5),  // red
         new Color(0.7, 0.7, 0.7),
         20
       )
     ),
     new Sphere(
-      new Vector(1.2, -0.5, -1.75),
-      0.4,
+      new Vector(-0.4, 0.1, -3),
+      0.8,
       new Material(
-        new Color(0, 0, 0),
-        new Color(0.5, 0.9, 0.5),
+        new Color(0.3, 0.3, 0.3),
+        new Color(0.5, 0.9, 0.5),  // green
         new Color(0.7, 0.7, 0.7),
         20
       )
@@ -155,7 +166,7 @@ const SCENE = {
     //   new Color(0.8, 0.8, 0.8)
     // ),
     new Light(
-      new Vector(0, 2, 3),       // location
+      new Vector(-0.4, 0, 2),       // location
       new Color(0.6, 0.6, 0.6),  // diffuse
       new Color(0.2, 0.2, 0.2)   // specular
     )
