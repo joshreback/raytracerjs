@@ -130,21 +130,39 @@ class RayTracer {
   }
 
   colorAtCoordinate(x, y) {
-    let alpha, beta, top, bottom, point, ray;
+    let alpha, beta, deltaAlpha, deltaBeta, top, bottom, point, ray;
 
+    deltaAlpha = (0.5) / this.w;
+    deltaBeta = (0.5) / this.h;
     alpha = x / this.w;
     beta = y / this.h;
-    top = Vector.lerp(this.scene.imagePlane.vec1, this.scene.imagePlane.vec2, alpha);
-    bottom = Vector.lerp(this.scene.imagePlane.vec3, this.scene.imagePlane.vec4, alpha);
-    point = Vector.lerp(top, bottom, beta);
-    ray = new Ray(
-      point,
-      point.minus(this.scene.camera)
-    );
 
-    return this.trace(ray, 3);
+    const getPoint = (alphaParam, betaParam) => {
+      top = Vector.lerp(this.scene.imagePlane.vec1, this.scene.imagePlane.vec2, alphaParam);
+      bottom = Vector.lerp(this.scene.imagePlane.vec3, this.scene.imagePlane.vec4, alphaParam);
+      point = Vector.lerp(top, bottom, betaParam);
+      return point;
+    }
+
+    let points = []
+    points.push(getPoint(alpha, beta));
+    points.push(getPoint(alpha + deltaAlpha, beta));
+    points.push(getPoint(alpha, beta + deltaBeta));
+    points.push(getPoint(alpha + deltaAlpha, beta + deltaBeta));
+
+    let avg = new Color(0, 0, 0);
+    for (let pt of points) {
+      ray = new Ray(
+        pt,
+        pt.minus(this.scene.camera)
+      );
+      avg = avg.plus(this.trace(ray, 3))
+    }
+
+    return avg.scale(1/4.0);
   }
 }
+
 const WIDTH = 256;
 const HEIGHT = 192;
 
