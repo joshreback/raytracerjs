@@ -8,12 +8,17 @@ class Vector {
   add(vec) {
     return new Vector(this.x + vec.x, this.y + vec.y, this.z + vec.z);
   }
+
   minus(vec) {
     return new Vector(this.x - vec.x, this.y - vec.y, this.z - vec.z);
   }
 
   scale(factor) {
     return new Vector(this.x * factor, this.y * factor, this.z * factor);
+  }
+
+  dot(other) {
+    return this.x * other.x + this.y * other.y + this.z * other.z;
   }
 
   static lerp(vec1, vec2, percent) {
